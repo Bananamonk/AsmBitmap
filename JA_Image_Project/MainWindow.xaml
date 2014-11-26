@@ -1,0 +1,67 @@
+﻿<Window x:Class="JA_Image_Project.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Projekt Asembler K. Herok - Filtrowanie Bitmap" Height="720" Width="1280"
+        Background="CadetBlue">
+    <Grid>
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" MaxWidth="300" />
+        </Grid.ColumnDefinitions>
+        
+        <DockPanel Grid.Column="0" Width="Auto" >
+            <GroupBox  Header="Original Image" 
+                      MaxHeight="350" Margin="10,10,10,10">
+                <Image Name="ImageSlot" 
+                           Source="S:\III Rok\Sem V\JA\Projekt Visual\JA_Image_Project\JA_Image_Project\Background.png" 
+                           Stretch="Uniform" AllowDrop="True" 
+                           Drop="ImagePanel_Drop" Width="445">
+                </Image>
+            </GroupBox>
+            <GroupBox Header="Converted image" 
+                      Margin="10,10,10,10" MaxHeight="350">
+                <Image Name="convertedImageSlot"
+                               Source="S:\III Rok\Sem V\JA\Projekt Visual\JA_Image_Project\JA_Image_Project\Background.png" 
+                               Stretch="Uniform" AllowDrop="True" 
+                               Drop="ImagePanel_Drop">
+                </Image>
+            </GroupBox>
+        </DockPanel>
+        
+        <StackPanel Grid.Column="1">
+            <Expander Header="Filtry zaimplementowane w C#" FontSize="16" 
+                      Margin="5, 20, 5, 0" Background="DarkCyan">
+                <StackPanel IsEnabled="False" x:Name="StackPanel1">
+                    <Label Content="Wybierz filtr który nałożyć na bitmapę."/>
+                    <Button Name="RozmycieButton" Content="Rozmycie" Margin="10,10,10,10" Click="RozmycieButton_Click"/>
+                    <Button Name="WyostrzenieButton" Content="Wyostrzenie" Margin="10,10,10,10" Click="Wyostrzenie_Click"/>
+                    <Button Name="PieprzISólButton" Content="Pieprz i sól" Margin="10,10,10,10" Click="PieprzISólButton_Click"/>
+                    <Button Name="SepiaButton" Content="Sepia" Margin="10,10,10,10" Click="SepiaButton_Click"/>                
+                </StackPanel>
+            </Expander>
+            <Expander Header="Filtry zaimplementowane w ASM" FontSize="16" 
+                      Margin="5, 20, 5, 0" Background="DarkCyan">
+                <StackPanel IsEnabled="False" x:Name="StackPanel2">
+                    <Label Content="Wybierz filtr który nałożyć na bitmapę."/>
+                    <Button Name="AsmRozmycieButton" Content="Rozmycie" Margin="10,10,10,10"/>
+                    <Button Name="AsmWuostrzenieButton" Content="Wyostrzenie" Margin="10,10,10,10"/>
+                    <Button Name="AsmPieprzISólButton" Content="Pieprz i sól" Margin="10,10,10,10"/>
+                    <Button Name="AsmSepiaButton" Content="Sepia" Margin="10,10,10,10"/>
+                </StackPanel>
+            </Expander>
+            <Expander Header="Czas wykonania filtru" FontSize="16" 
+                      IsExpanded="True" Margin="5, 20, 5, 0" Background="DarkCyan">
+                <StackPanel>
+                    <TextBox x:Name="TextBoxTime" Text="Time Elapsed" IsReadOnly="True" Cursor="Arrow" Margin="0,0,0,5"
+                    AllowDrop="False" FontSize="30" IsUndoEnabled="False" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                    Background="DarkCyan"/>
+                </StackPanel>
+            </Expander>  
+        </StackPanel>
+    </Grid>
+</Window>
