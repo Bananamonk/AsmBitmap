@@ -12,8 +12,10 @@ namespace JA_Image_Project
     internal struct BitmapInfo
     {
         public Bitmap bmpNew { get; set; }
+        // Lock image bits for read/write.
         public BitmapData bmpData { get; set; }
         public IntPtr ptr { get; set; }
+        // Declare an array to hold the bytes of the bitmap.
         public byte[] byteBuffer { get; set; }
     }
 
@@ -31,6 +33,7 @@ namespace JA_Image_Project
             bitmapInfo.byteBuffer = new byte[bitmapInfo.bmpData.Stride * bitmapInfo.bmpNew.Height];
             return bitmapInfo;
         }
+        
         private static Bitmap GetArgbCopy(Image sourceImage)
         {
             Bitmap bmpNew = new Bitmap(sourceImage.Width, sourceImage.Height, PixelFormat.Format32bppArgb);
@@ -77,32 +80,26 @@ namespace JA_Image_Project
 
         public static Bitmap Sharpening(this Image sourceImage)
         {
-            Bitmap sharpenImage = GetArgbCopy(sourceImage);
+            BitmapInfo bitmapInfo = GetBitmapInfo(sourceImage);
 
-            int filterWidth = 3;
-            int filterHeight = 3;
-            int width = sharpenImage.Width;
-            int height = sharpenImage.Height;
+            const int filterWidth = 3;
+            const int filterHeight = 3;
+            int width = bitmapInfo.bmpNew.Width;
+            int height = bitmapInfo.bmpNew.Height;
 
             // Create sharpening filter.
-            double[,] filter = new double[filterWidth, filterHeight];
-            filter[0, 0] = filter[0, 1] = filter[0, 2] = filter[1, 0] = filter[1, 2] = filter[2, 0] = filter[2, 1] = filter[2, 2] = -1;
+            var filter = new double[filterWidth, filterHeight];
+            filter[0, 1] = filter[1, 0] = filter[1, 2] = filter[2, 1] = -1;
+            filter[0, 0] = filter[2, 0] = filter[0, 2] = filter[2, 2] = 0;
             filter[1, 1] = 5;
 
-            double factor = 1.0;
-            double bias = 0.0;
+            const double factor = 1.0;
+            const double bias = 0.0;
 
-            Color[,] result = new Color[sharpenImage.Width, sharpenImage.Height];
-
-            // Lock image bits for read/write.
-            BitmapData pbits = sharpenImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-
-            // Declare an array to hold the bytes of the bitmap.
-            int bytes = pbits.Stride * height;
-            byte[] rgbValues = new byte[bytes];
+            var result = new Color[bitmapInfo.bmpNew.Width, bitmapInfo.bmpNew.Height];
 
             // Copy the RGB values into the array.
-            System.Runtime.InteropServices.Marshal.Copy(pbits.Scan0, rgbValues, 0, bytes);
+            Marshal.Copy(bitmapInfo.ptr, bitmapInfo.byteBuffer, 0, bitmapInfo.byteBuffer.Length);
 
             int rgb;
             // Fill the color array with the new sharpened color values.
@@ -110,7 +107,7 @@ namespace JA_Image_Project
             {
                 for (int y = 0; y < height; ++y)
                 {
-                    double red = 0.0, green = 0.0, blue = 0.0;
+                    double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
 
                     for (int filterX = 0; filterX < filterWidth; filterX++)
                     {
@@ -119,17 +116,18 @@ namespace JA_Image_Project
                             int imageX = (x - filterWidth / 2 + filterX + width) % width;
                             int imageY = (y - filterHeight / 2 + filterY + height) % height;
 
-                            rgb = imageY * pbits.Stride + 3 * imageX;
+                            rgb = imageY * bitmapInfo.bmpData.Stride + 4 * imageX;
 
-                            red += rgbValues[rgb + 2] * filter[filterX, filterY];
-                            green += rgbValues[rgb + 1] * filter[filterX, filterY];
-                            blue += rgbValues[rgb + 0] * filter[filterX, filterY];
+                            red += bitmapInfo.byteBuffer[rgb + 2] * filter[filterX, filterY];
+                            green += bitmapInfo.byteBuffer[rgb + 1] * filter[filterX, filterY];
+                            blue += bitmapInfo.byteBuffer[rgb + 0] * filter[filterX, filterY];
+                            alpha += bitmapInfo.byteBuffer[rgb + 3];
                         }
                         int r = Math.Min(Math.Max((int)(factor * red + bias), 0), 255);
                         int g = Math.Min(Math.Max((int)(factor * green + bias), 0), 255);
                         int b = Math.Min(Math.Max((int)(factor * blue + bias), 0), 255);
-
-                        result[x, y] = Color.FromArgb(r, g, b);
+                        int a = Math.Min(Math.Max((int)(factor * alpha + bias), 0), 255);
+                        result[x, y] = Color.FromArgb(a, r, g, b);
                     }
                 }
             }
@@ -139,20 +137,21 @@ namespace JA_Image_Project
             {
                 for (int y = 0; y < height; ++y)
                 {
-                    rgb = y * pbits.Stride + 3 * x;
+                    rgb = y * bitmapInfo.bmpData.Stride + 4 * x;
 
-                    rgbValues[rgb + 2] = result[x, y].R;
-                    rgbValues[rgb + 1] = result[x, y].G;
-                    rgbValues[rgb + 0] = result[x, y].B;
+                    bitmapInfo.byteBuffer[rgb + 3] = result[x, y].A;
+                    bitmapInfo.byteBuffer[rgb + 2] = result[x, y].R;
+                    bitmapInfo.byteBuffer[rgb + 1] = result[x, y].G;
+                    bitmapInfo.byteBuffer[rgb + 0] = result[x, y].B;
                 }
             }
 
             // Copy the RGB values back to the bitmap.
-            System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, pbits.Scan0, bytes);
+            Marshal.Copy(bitmapInfo.byteBuffer, 0, bitmapInfo.ptr, bitmapInfo.byteBuffer.Length);
             // Release image bits.
-            sharpenImage.UnlockBits(pbits);
+            bitmapInfo.bmpNew.UnlockBits(bitmapInfo.bmpData);
 
-            return sharpenImage;
+            return bitmapInfo.bmpNew;
         }
 
         public static Bitmap Blur(this Image sourceImage)
