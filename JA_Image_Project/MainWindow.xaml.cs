@@ -59,15 +59,18 @@ namespace JA_Image_Project
 
         private void PieprzISólButton_Click(object sender, RoutedEventArgs e)
         {
-
+            sw.Start();
+            BitmapToPlayWith = BitmapToPlayWith.SaltAndPepperFilter();
+            sw.Stop();
+            this.ShowResults();
         }
 
         private void SepiaButton_Click(object sender, RoutedEventArgs e)
         {
-                sw.Start();
-                BitmapToPlayWith = BitmapToPlayWith.CopyAsSepiaTone(); 
-                sw.Stop();
-                this.ShowResults();
+            sw.Start();
+            BitmapToPlayWith = BitmapToPlayWith.CopyAsSepiaTone(); 
+            sw.Stop();
+            this.ShowResults();
         }
         private void ShowResults()
         {
