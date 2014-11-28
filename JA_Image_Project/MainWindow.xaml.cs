@@ -53,6 +53,7 @@ namespace JA_Image_Project
                 BitmapToPlayWith = new Bitmap(files[0]);
                 StackPanel1.IsEnabled = true;
                 StackPanel2.IsEnabled = true;
+                StatusBarTextBlock.Text = "Proszę wybrać filtr.";
             }
         }
 
@@ -99,7 +100,7 @@ namespace JA_Image_Project
         {
                 sw.Start();
 
-                BitmapToPlayWith = BitmapToPlayWith.Blur();
+                BitmapToPlayWith = BitmapToPlayWith.BlurOnMatrix();
 
                 sw.Stop();
                 this.ShowResults();

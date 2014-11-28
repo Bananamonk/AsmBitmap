@@ -154,6 +154,82 @@ namespace JA_Image_Project
             return bitmapInfo.bmpNew;
         }
 
+        public static Bitmap BlurOnMatrix(this Image sourceImage)
+        {
+            BitmapInfo bitmapInfo = GetBitmapInfo(sourceImage);
+
+            const int filterWidth = 3;
+            const int filterHeight = 3;
+            int width = bitmapInfo.bmpNew.Width;
+            int height = bitmapInfo.bmpNew.Height;
+
+            // Create sharpening filter.
+            var filter = new double[filterWidth, filterHeight];
+            filter[0, 1] = filter[1, 0] = filter[1, 2] = filter[2, 1] = 2;
+            filter[0, 0] = filter[2, 0] = filter[0, 2] = filter[2, 2] = 1;
+            filter[1, 1] = 4;
+
+            const double factor =1.0;
+            const double bias = 0.0;
+
+            var result = new Color[bitmapInfo.bmpNew.Width, bitmapInfo.bmpNew.Height];
+
+            // Copy the RGB values into the array.
+            Marshal.Copy(bitmapInfo.ptr, bitmapInfo.byteBuffer, 0, bitmapInfo.byteBuffer.Length);
+
+            int rgb;
+            // Fill the color array with the new sharpened color values.
+            for (int x = 0; x < width; ++x)
+            {
+                for (int y = 0; y < height; ++y)
+                {
+                    double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+
+                    for (int filterX = 0; filterX < filterWidth; filterX++)
+                    {
+                        for (int filterY = 0; filterY < filterHeight; filterY++)
+                        {
+                            int imageX = (x - filterWidth / 2 + filterX + width) % width;
+                            int imageY = (y - filterHeight / 2 + filterY + height) % height;
+
+                            rgb = imageY * bitmapInfo.bmpData.Stride + 4 * imageX;
+
+                            red += (bitmapInfo.byteBuffer[rgb + 2] * filter[filterX, filterY])/16;
+                            green += (bitmapInfo.byteBuffer[rgb + 1] * filter[filterX, filterY]/16);
+                            blue += (bitmapInfo.byteBuffer[rgb + 0] * filter[filterX, filterY]/16);
+                            alpha += bitmapInfo.byteBuffer[rgb + 3];
+                        }
+                        int r = Math.Min(Math.Max((int)(factor * red + bias), 0), 255);
+                        int g = Math.Min(Math.Max((int)(factor * green + bias), 0), 255);
+                        int b = Math.Min(Math.Max((int)(factor * blue + bias), 0), 255);
+                        int a = Math.Min(Math.Max((int)(factor * alpha + bias), 0), 255);
+                        result[x, y] = Color.FromArgb(a, r, g, b);
+                    }
+                }
+            }
+
+            // Update the image with the sharpened pixels.
+            for (int x = 0; x < width; ++x)
+            {
+                for (int y = 0; y < height; ++y)
+                {
+                    rgb = y * bitmapInfo.bmpData.Stride + 4 * x;
+
+                    bitmapInfo.byteBuffer[rgb + 3] = result[x, y].A;
+                    bitmapInfo.byteBuffer[rgb + 2] = result[x, y].R;
+                    bitmapInfo.byteBuffer[rgb + 1] = result[x, y].G;
+                    bitmapInfo.byteBuffer[rgb + 0] = result[x, y].B;
+                }
+            }
+
+            // Copy the RGB values back to the bitmap.
+            Marshal.Copy(bitmapInfo.byteBuffer, 0, bitmapInfo.ptr, bitmapInfo.byteBuffer.Length);
+            // Release image bits.
+            bitmapInfo.bmpNew.UnlockBits(bitmapInfo.bmpData);
+
+            return bitmapInfo.bmpNew;
+        }
+
         public static Bitmap Blur(this Image sourceImage)
         {
             Int32 blurSize = 3;

@@ -7,6 +7,7 @@
         
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
         
         <Grid.ColumnDefinitions>
@@ -32,6 +33,15 @@
                 </Image>
             </GroupBox>
         </DockPanel>
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="False">
+            <StatusBar  FontSize="25" Width="Auto" Height="Auto" Name="ProgressBar1" Background="Aqua">
+                <StatusBarItem FontStretch="Medium">
+                    <TextBlock Name="StatusBarTextBlock" Text="Proszę zrzucić zdjęcie na pole ''Drop the image here''" 
+                               IsEnabled="False" >                       
+                    </TextBlock>
+                </StatusBarItem>
+            </StatusBar>
+        </StackPanel>
         
         <StackPanel Grid.Column="1">
             <Expander Header="Filtry zaimplementowane w C#" FontSize="16" 
@@ -58,7 +68,8 @@
                       IsExpanded="True" Margin="5, 20, 5, 0" Background="DarkCyan">
                 <StackPanel>
                     <TextBox x:Name="TextBoxTime" Text="Time Elapsed" IsReadOnly="True" Cursor="Arrow" Margin="0,0,0,5"
-                    AllowDrop="False" FontSize="30" IsUndoEnabled="False" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                    AllowDrop="False" FontSize="30" IsUndoEnabled="False" VerticalContentAlignment="Center" 
+                    HorizontalContentAlignment="Center"
                     Background="DarkCyan"/>
                 </StackPanel>
             </Expander>  
